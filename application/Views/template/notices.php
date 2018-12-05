@@ -1,4 +1,4 @@
-<?php if(session('messages')) : ?>
+<?php if(session('message')) : ?>
 	<div class="alert alert-success"><?= session('message') ?></div>
 <?php endif ?>
 

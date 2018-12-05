@@ -36,14 +36,14 @@
 			<!-- Password -->
 			<div class="form-group">
 				<label for="password" class="form-label">Password</label>
-				<input type="password" name="password" class="form-control" value="<?= old('password') ?>" required>
+				<input type="password" name="password" class="form-control" required>
 				<small>Minimum 8 characters</small>
 			</div>
 
 			<!-- Password (again) -->
 			<div class="form-group">
 				<label for="pass_confirm" class="form-label">Password (again)</label>
-				<input type="password" name="pass_confirm" class="form-control" value="<?= old('pass_confirm') ?>" required>
+				<input type="password" name="pass_confirm" class="form-control" required>
 			</div>
 
 			<br>

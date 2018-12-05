@@ -37,11 +37,10 @@
  */
 
 /**
- * Files collector
+ * History collector
  */
-class Files extends BaseCollector
+class History extends BaseCollector
 {
-
 	/**
 	 * Whether this collector has data that can
 	 * be displayed in the Timeline.
@@ -59,23 +58,71 @@ class Files extends BaseCollector
 	protected $hasTabContent = true;
 
 	/**
+	 * Whether this collector needs to display
+	 * a label or not.
+	 *
+	 * @var boolean
+	 */
+	protected $hasLabel = true;
+
+	/**
 	 * The 'title' of this Collector.
 	 * Used to name things in the toolbar HTML.
 	 *
 	 * @var string
 	 */
-	protected $title = 'Files';
+	protected $title = 'History';
+
+	/**
+	 * @var array History files
+	 */
+	protected $files = [];
 
 	//--------------------------------------------------------------------
 
 	/**
-	 * Returns any information that should be shown next to the title.
-	 *
-	 * @return string
+	 * @param integer $current Current history time
+	 * @param integer $limit   Max history files
 	 */
-	public function getTitleDetails(): string
+	public function setFiles(int $current, int $limit = 20)
 	{
-		return '( ' . (int) count(get_included_files()) . ' )';
+		$filenames = glob(WRITEPATH . 'debugbar/debugbar_*.json');
+
+		$files   = [];
+		$counter = 0;
+
+		foreach (array_reverse($filenames) as $filename)
+		{
+			$counter++;
+
+			// Oldest files will be deleted
+			if ($limit >= 0 && $counter > $limit)
+			{
+				unlink($filename);
+				continue;
+			}
+
+			// Get the contents of this specific history request
+			$contents = file_get_contents($filename);
+			$contents = json_decode($contents);
+
+			\preg_match_all('/\d+/', $filename, $time);
+			$time = (int)$time[0][1];
+
+			// Debugbar files shown in History Collector
+			$files[] = [
+				'time'        => $time,
+				'datetime'    => date('Y-m-d H:i:s', $time),
+				'active'      => $time === $current,
+				'status'      => $contents->vars->response->statusCode,
+				'method'      => $contents->method,
+				'url'         => $contents->url,
+				'isAJAX'      => $contents->isAJAX ? 'Yes' : 'No',
+				'contentType' => $contents->vars->response->contentType,
+			];
+		}
+
+		$this->files = $files;
 	}
 
 	//--------------------------------------------------------------------
@@ -87,37 +134,7 @@ class Files extends BaseCollector
 	 */
 	public function display(): array
 	{
-		$rawFiles  = get_included_files();
-		$coreFiles = [];
-		$userFiles = [];
-
-		foreach ($rawFiles as $file)
-		{
-			$path = $this->cleanPath($file);
-
-			if (strpos($path, 'BASEPATH') !== false)
-			{
-				$coreFiles[] = [
-					'name' => basename($file),
-					'path' => $path,
-				];
-			}
-			else
-			{
-				$userFiles[] = [
-					'name' => basename($file),
-					'path' => $path,
-				];
-			}
-		}
-
-		sort($userFiles);
-		sort($coreFiles);
-
-		return [
-			'coreFiles' => $coreFiles,
-			'userFiles' => $userFiles,
-		];
+		return ['files' => $this->files];
 	}
 
 	//--------------------------------------------------------------------
@@ -129,7 +146,12 @@ class Files extends BaseCollector
 	 */
 	public function getBadgeValue()
 	{
-		return count(get_included_files());
+		return count($this->files);
+	}
+
+	public function isEmpty()
+	{
+		return empty($this->files);
 	}
 
 	//--------------------------------------------------------------------
@@ -143,6 +165,6 @@ class Files extends BaseCollector
 	 */
 	public function icon(): string
 	{
-		return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGBSURBVEhL7ZQ9S8NQGIVTBQUncfMfCO4uLgoKbuKQOWg+OkXERRE1IAXrIHbVDrqIDuLiJgj+gro7S3dnpfq88b1FMTE3VZx64HBzzvvZWxKnj15QCcPwCD5HUfSWR+JtzgmtsUcQBEva5IIm9SwSu+95CAWbUuy67qBa32ByZEDpIaZYZSZMjjQuPcQUq8yEyYEb8FSerYeQVGbAFzJkX1PyQWLhgCz0BxTCekC1Wp0hsa6yokzhed4oje6Iz6rlJEkyIKfUEFtITVtQdAibn5rMyaYsMS+a5wTv8qeXMhcU16QZbKgl3hbs+L4/pnpdc87MElZgq10p5DxGdq8I7xrvUWUKvG3NbSK7ubngYzdJwSsF7TiOh9VOgfcEz1UayNe3JUPM1RWC5GXYgTfc75B4NBmXJnAtTfpABX0iPvEd9ezALwkplCFXcr9styiNOKc1RRZpaPM9tcqBwlWzGY1qPL9wjqRBgF5BH6j8HWh2S7MHlX8PrmbK+k/8PzjOOzx1D3i1pKTTAAAAAElFTkSuQmCC';
+		return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJySURBVEhL3ZU7aJNhGIVTpV6i4qCIgkIHxcXLErS4FBwUFNwiCKGhuTYJGaIgnRoo4qRu6iCiiIuIXXTTIkIpuqoFwaGgonUQlC5KafU5ycmNP0lTdPLA4fu+8573/a4/f6hXpFKpwUwmc9fDfweKbk+n07fgEv33TLSbtt/hvwNFT1PsG/zdTE0Gp+GFfD6/2fbVIxqNrqPIRbjg4t/hY8aztcngfDabHXbKyiiXy2vcrcPH8oDCry2FKDrA+Ar6L01E/ypyXzXaARjDGGcoeNxSDZXE0dHRA5VRE5LJ5CFy5jzJuOX2wHRHRnjbklZ6isQ3tIctBaAd4vlK3jLtkOVWqABBXd47jGHLmjTmSScttQV5J+SjfcUweFQEbsjAas5aqoCLXutJl7vtQsAzpRowYqkBinyCC8Vicb2lOih8zoldd0F8RD7qTFiqAnGrAy8stUAvi/hbqDM+YzkAFrLPdR5ZqoLXsd+Bh5YCIH7JniVdquUWxOPxDfboHhrI5XJ7HHhiqQXox+APe/Qk64+gGYVCYZs8cMpSFQj9JOoFzVqqo7k4HIvFYpscCoAjOmLffUsNUGRaQUwDlmofUa34ecsdgXdcXo4wbakBgiUFafXJV8A4DJ/2UrxUKm3E95H8RbjLcgOJRGILhnmCP+FBy5XvwN2uIPcy1AJvWgqC4xm2aU4Xb3lF4I+Tpyf8hRe5w3J7YLymSeA8Z3nSclv4WLRyFdfOjzrUFX0klJUEtZtntCNc+F69cz/FiDzEPtjzmcUMOr83kDQEX6pAJxJfpL3OX22n01YN7SZCoQnaSdoZ+Jz+PZihH3wt/xlCoT9M6nEtmRSPCQAAAABJRU5ErkJggg==';
 	}
 }

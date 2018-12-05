@@ -1,9 +1,30 @@
+<?php
+/**
+ * @var \CodeIgniter\Debug\Toolbar $this
+ * @var int                        $totalTime
+ * @var int                        $totalMemory
+ * @var string                     $url
+ * @var string                     $method
+ * @var bool                       $isAJAX
+ * @var int                        $startTime
+ * @var int                        $totalTime
+ * @var int                        $totalMemory
+ * @var float                      $segmentDuration
+ * @var int                        $segmentCount
+ * @var string                     $CI_VERSION
+ * @var array                      $collectors
+ * @var array                      $vars
+ * @var array                      $styles
+ * @var \CodeIgniter\View\Parser   $parser
+ */
+
+?>
 <style type="text/css">
-	<?= preg_replace('#[\r\n\t ]+#', ' ', file_get_contents(__DIR__.'/toolbar.css')) ?>
+	<?= preg_replace('#[\r\n\t ]+#', ' ', file_get_contents(__DIR__ . '/toolbar.css')) ?>
 </style>
 
 <script id="toolbar_js" type="text/javascript">
-	<?= file_get_contents(__DIR__.'/toolbar.js') ?>
+	<?= file_get_contents(__DIR__ . '/toolbar.js') ?>
 </script>
 <div id="debug-icon" class="debug-bar-ndisplay">
 	<a id="debug-icon-link" href="javascript:void(0)">
@@ -11,7 +32,7 @@
 			width="155.000000px" height="200.000000px" viewBox="0 0 155.000000 200.000000"
 			preserveAspectRatio="xMidYMid meet">
 			<g transform="translate(0.000000,200.000000) scale(0.100000,-0.100000)" fill="#dd4814" stroke="none">
-			<path d="M737 1963 c22 -79 -7 -185 -78 -290 -18 -26 -107 -122 -197 -213
+				<path d="M737 1963 c22 -79 -7 -185 -78 -290 -18 -26 -107 -122 -197 -213
 				-239 -240 -336 -371 -403 -544 -79 -206 -78 -408 5 -582 64 -134 212 -264 361
 				-314 l60 -20 -30 22 c-210 152 -229 387 -48 588 25 27 48 50 51 50 4 0 7 -27
 				7 -61 0 -57 2 -62 37 -95 30 -27 46 -34 78 -34 56 0 99 24 116 65 29 69 16
@@ -38,7 +59,7 @@
 		<?php foreach ($collectors as $c) : ?>
 			<?php if (! $c['isEmpty'] && ($c['hasTabContent'] || $c['hasLabel'])) : ?>
 				<span class="ci-label">
-					<a href="javascript: void(0)" data-tab="ci-<?= $c['titleSafe'] ?>" >
+					<a href="javascript: void(0)" data-tab="ci-<?= $c['titleSafe'] ?>">
 						<img src="<?= $c['icon'] ?>">
 						<span class="hide-sm">
 							<?= $c['title'] ?>
@@ -60,7 +81,7 @@
 
 		<h1>
 			<span class="ci-label">
-				<a href="javascript: void(0)" data-tab="ci-config" >
+				<a href="javascript: void(0)" data-tab="ci-config">
 					<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
 						width="18.60px" height="24.0px" viewBox="0 0 18.60 28.000000"
 						preserveAspectRatio="xMidYMid meet">
@@ -92,17 +113,18 @@
 	<div id="ci-timeline" class="tab">
 		<table class="timeline">
 			<thead>
-				<tr>
-					<th class="debug-bar-width30">NAME</th>
-					<th class="debug-bar-width10">COMPONENT</th>
-					<th class="debug-bar-width10">DURATION</th>
-					<?php for ($i = 0; $i < $segmentCount; $i++) : ?>
-						<th><?= $i * $segmentDuration ?> ms</th>
-					<?php endfor ?>
-				</tr>
+			<tr>
+				<th class="debug-bar-width30">NAME</th>
+				<th class="debug-bar-width10">COMPONENT</th>
+				<th class="debug-bar-width10">DURATION</th>
+				<?php for ($i = 0; $i < $segmentCount; $i++) : ?>
+					<th><?= $i * $segmentDuration ?> ms</th>
+				<?php endfor ?>
+			</tr>
 			</thead>
 			<tbody>
-				<?= self::renderTimeline($collectors, $startTime, $segmentCount, $segmentDuration, $styles) ?>
+			<?= $this->renderTimeline($collectors, $startTime, $segmentCount, $segmentDuration,
+				$styles) ?>
 			</tbody>
 		</table>
 	</div>
@@ -110,7 +132,7 @@
 	<!-- Collector-provided Tabs -->
 	<?php foreach ($collectors as $c) : ?>
 		<?php if (! $c['isEmpty']) : ?>
-			<?php if  ($c['hasTabContent']) : ?>
+			<?php if ($c['hasTabContent']) : ?>
 				<div id="ci-<?= $c['titleSafe'] ?>" class="tab">
 					<h2><?= $c['title'] ?> <span><?= $c['titleDetails'] ?></span></h2>
 
@@ -124,16 +146,17 @@
 	<div id="ci-vars" class="tab">
 
 		<!-- VarData from Collectors -->
-		<?php if(isset($vars['varData'])) : ?>
+		<?php if (isset($vars['varData'])) : ?>
 			<?php foreach ($vars['varData'] as $heading => $items) : ?>
 
-				<a href="javascript:void(0)" onclick="ciDebugBar.toggleDataTable('<?= strtolower(str_replace(' ', '-', $heading)) ?>'); return false;">
+				<a href="javascript:void(0)" onclick="ciDebugBar.toggleDataTable('<?= strtolower(str_replace(' ',
+					'-', $heading)) ?>'); return false;">
 					<h2><?= $heading ?></h2>
 				</a>
 
 				<?php if (is_array($items)) : ?>
 
-					<table id="<?= strtolower(str_replace(' ', '-', $heading.'_table')) ?>">
+					<table id="<?= strtolower(str_replace(' ', '-', $heading . '_table')) ?>">
 						<tbody>
 						<?php foreach ($items as $key => $value) : ?>
 							<tr>
@@ -218,10 +241,10 @@
 			<table id="request_headers_table">
 				<tbody>
 				<?php foreach ($headers as $header => $value) : ?>
-						<tr>
-							<td><?= $header ?></td>
-							<td><?= $value ?></td>
-						</tr>
+					<tr>
+						<td><?= $header ?></td>
+						<td><?= $value ?></td>
+					</tr>
 				<?php endforeach ?>
 				</tbody>
 			</table>
@@ -237,14 +260,16 @@
 				<?php foreach ($cookies as $name => $value) : ?>
 					<tr>
 						<td><?= $name ?></td>
-						<td><?= is_array($value) ? var_dump($value) : $value ?></td>
+						<td><?= is_array($value) ? print_r($value, true) : $value ?></td>
 					</tr>
 				<?php endforeach ?>
 				</tbody>
 			</table>
 		<?php endif ?>
 
-		<h2>Response <span>( <?= $vars['response']['statusCode'].' - '. $vars['response']['reason'] ?> )</span></h2>
+		<h2>Response
+			<span>( <?= $vars['response']['statusCode'] . ' - ' . $vars['response']['reason'] ?> )</span>
+		</h2>
 
 		<?php if (isset($vars['headers']) && $headers = $vars['headers']) : ?>
 			<a href="javascript:void(0)" onclick="ciDebugBar.toggleDataTable('response_headers'); return false;">
@@ -272,9 +297,10 @@
 	</div>
 </div>
 <style type="text/css">
-	<?php foreach( $styles as $name => $style ) : ?>
+	<?php foreach($styles as $name => $style) : ?>
 	.<?= $name ?> {
-	<?= $style ?>
+		<?= $style ?>
 	}
+
 	<?php endforeach ?>
 </style>

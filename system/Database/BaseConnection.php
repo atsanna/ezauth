@@ -338,7 +338,10 @@ abstract class BaseConnection implements ConnectionInterface
 	{
 		foreach ($params as $key => $value)
 		{
-			$this->$key = $value;
+			if (property_exists($this, $key))
+			{
+				$this->$key = $value;
+			}
 		}
 	}
 
@@ -382,7 +385,10 @@ abstract class BaseConnection implements ConnectionInterface
 					// Replace the current settings with those of the failover
 					foreach ($failover as $key => $val)
 					{
-						$this->$key = $val;
+						if (property_exists($this, $key))
+						{
+							$this->$key = $val;
+						}
 					}
 
 					// Try to connect
@@ -633,8 +639,6 @@ abstract class BaseConnection implements ConnectionInterface
 				$this->transStatus = false;
 			}
 
-			// @todo deal with errors
-
 			if ($this->DBDebug)
 			{
 				// We call this function in order to roll-back queries
@@ -648,14 +652,10 @@ abstract class BaseConnection implements ConnectionInterface
 
 					if ($transDepth === $this->transDepth)
 					{
-						// @todo log
-						// log_message('error', 'Database: Failure during an automated transaction commit/rollback!');
+						log_message('error', 'Database: Failure during an automated transaction commit/rollback!');
 						break;
 					}
 				}
-
-				// display the errors....
-				// @todo display the error...
 
 				return false;
 			}
