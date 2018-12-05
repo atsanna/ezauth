@@ -19,18 +19,17 @@ use CodeIgniter\Events\Events;
  *      Events::on('create', [$myInstance, 'myMethod']);
  */
 
-
-
 /*
  * --------------------------------------------------------------------
  * Debug Toolbar Listeners.
  * --------------------------------------------------------------------
  * If you delete, they will no longer be collected.
  */
-if (ENVIRONMENT != 'production')
+if (ENVIRONMENT !== 'production')
 {
 	Events::on('DBQuery', 'CodeIgniter\Debug\Toolbar\Collectors\Database::collect');
 
-	// Handles the display of the toolbar itself. MUST remain here for toolbar to be displayed.
-	Events::on('pre_system', 'CodeIgniter\Debug\Toolbar::eventHandler');
+	Events::on('pre_system', function () {
+		Services::toolbar()->respond();
+	});
 }

@@ -34,10 +34,15 @@ class RegisterController extends Controller
 		// the User Entity automatically creates the
 		// password_hash field, which means these are
 		// no longer around during the save method.
-		$this->validate([
-			'password'     => 'min_length[8]',
+		if (! $this->validate([
+			'password'     => 'min_length[8]|valid_password',
 			'pass_confirm' => 'matches[password]',
-		]);
+		]))
+        {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+		// @todo check password against variations of personal info
 
 		$userModel = new UserModel();
 
