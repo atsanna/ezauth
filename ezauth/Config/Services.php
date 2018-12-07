@@ -13,7 +13,7 @@ class Services extends \Config\Services
      *
      * @return Passwords|mixed
      */
-    public static function passwords(BaseConfig $config = null, $getShared = true)
+    public static function passwords(Auth $config = null, $getShared = true)
     {
         if ($getShared)
         {

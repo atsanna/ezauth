@@ -1,6 +1,7 @@
 <?php namespace EZAuth\Passwords;
 
 use CodeIgniter\Config\BaseConfig;
+use EZAuth\Config\Auth;
 use EZAuth\Entities\User;
 
 class Passwords
@@ -10,7 +11,7 @@ class Passwords
      */
     protected $config;
 
-    public function __construct(BaseConfig $config)
+    public function __construct(Auth $config)
     {
         $this->config = $config;
     }
