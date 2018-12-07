@@ -1,5 +1,7 @@
 <?php namespace EZAuth\Passwords;
 
+use Config\Services;
+
 class ValidationRules
 {
     /**
@@ -12,24 +14,8 @@ class ValidationRules
      */
     public function valid_password($password = null, string &$error = null): bool
     {
-        // Loop over our dictionary to see if we can find the password
-        $fp = fopen(__DIR__ .'/_dictionary.txt', 'r');
-        if ($fp)
-        {
-            while (($line = fgets($fp, 4096)) !== false)
-            {
-                if ($password == trim($line))
-                {
-                    fclose($fp);
+        $passwords = Services::passwords();
 
-                    $error = lang('Auth.errorPasswordCommon');
-                    return false;
-                }
-            }
-        }
-
-        fclose($fp);
-
-        return true;
+        return $passwords->isSafe($password, $error);
     }
 }
