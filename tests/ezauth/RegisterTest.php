@@ -15,7 +15,7 @@ class RegisterTest extends FeatureTestCase
 		$response->assertSee('<h2>Register</h2>');
 	}
 
-	public function testRegisterSuccess()
+	public function testRegisterSuccessWeakPassword()
 	{
 		$data = [
 			'first_name' => 'Tom',
@@ -29,7 +29,7 @@ class RegisterTest extends FeatureTestCase
 
 		$response = $this->post('register', $data);
 
-		$this->assertTrue($response->isRedirect());
+		$this->assertFalse($response->isRedirect());
 		$this->seeInDatabase('users', ['email' => 'tf@example.com']);
 	}
 }
