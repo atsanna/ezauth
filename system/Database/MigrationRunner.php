@@ -7,7 +7,7 @@
  *
  * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2014-2018 British Columbia Institute of Technology
+ * Copyright (c) 2014-2019 British Columbia Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
  *
  * @package    CodeIgniter
  * @author     CodeIgniter Dev Team
- * @copyright  2014-2018 British Columbia Institute of Technology (https://bcit.ca/)
+ * @copyright  2014-2019 British Columbia Institute of Technology (https://bcit.ca/)
  * @license    https://opensource.org/licenses/MIT	MIT License
  * @link       https://codeigniter.com
  * @since      Version 3.0.0
@@ -126,17 +126,30 @@ class MigrationRunner
 	 */
 	protected $cliMessages = [];
 
+	/**
+	 * Tracks whether we have already ensured
+	 * the table exists or not.
+	 *
+	 * @var bool
+	 */
+	protected $tableChecked = false;
+
 	//--------------------------------------------------------------------
 
 	/**
 	 * Constructor.
 	 *
-	 * @param BaseConfig                                $config
-	 * @param \CodeIgniter\Database\ConnectionInterface $db
+	 * When passing in $db, you may pass any of the following to connect:
+	 * - group name
+	 * - existing connection instance
+	 * - array of database configuration values
+	 *
+	 * @param BaseConfig                                             $config
+	 * @param \CodeIgniter\Database\ConnectionInterface|array|string $db
 	 *
 	 * @throws ConfigException
 	 */
-	public function __construct(BaseConfig $config, ConnectionInterface $db = null)
+	public function __construct(BaseConfig $config, $db = null)
 	{
 		$this->enabled        = $config->enabled ?? false;
 		$this->type           = $config->type ?? 'timestamp';
@@ -147,14 +160,9 @@ class MigrationRunner
 		$this->namespace = APP_NAMESPACE;
 
 		// get default database group
-		$config      = new \Config\Database();
+		$config      = config('Database');
 		$this->group = $config->defaultGroup;
 		unset($config);
-
-		if (empty($this->table))
-		{
-			throw ConfigException::forMissingMigrationsTable();
-		}
 
 		if (! in_array($this->type, ['sequential', 'timestamp']))
 		{
@@ -166,9 +174,7 @@ class MigrationRunner
 
 		// If no db connection passed in, use
 		// default database group.
-		$this->db = ! empty($db) ? $db : \Config\Database::connect();
-
-		$this->ensureTable();
+		$this->db = db_connect($db);
 	}
 
 	//--------------------------------------------------------------------
@@ -179,19 +185,22 @@ class MigrationRunner
 	 * Calls each migration step required to get to the schema version of
 	 * choice
 	 *
-	 * @param integer     $targetVersion Target schema version
+	 * @param string      $targetVersion Target schema version
 	 * @param string|null $namespace
 	 * @param string|null $group
 	 *
 	 * @return mixed TRUE if no migrations are found, current version string on success, FALSE on failure
 	 * @throws ConfigException
 	 */
-	public function version(int $targetVersion, string $namespace = null, string $group = null)
+	public function version(string $targetVersion, string $namespace = null, string $group = null)
 	{
 		if (! $this->enabled)
 		{
 			throw ConfigException::forDisabledMigrations();
 		}
+
+		$this->ensureTable();
+
 		// Set Namespace if not null
 		if (! is_null($namespace))
 		{
@@ -277,13 +286,15 @@ class MigrationRunner
 	/**
 	 * Sets the schema to the latest migration
 	 *
-	 * @param string $namespace
-	 * @param string $group
+	 * @param string|null $namespace
+	 * @param string|null $group
 	 *
 	 * @return mixed    Current version string on success, FALSE on failure
 	 */
-	public function latest($namespace = null, $group = null)
+	public function latest(string $namespace = null, string $group = null)
 	{
+		$this->ensureTable();
+
 		// Set Namespace if not null
 		if (! is_null($namespace))
 		{
@@ -309,12 +320,14 @@ class MigrationRunner
 	/**
 	 * Sets the schema to the latest migration for all namespaces
 	 *
-	 * @param string $group
+	 * @param string|null $group
 	 *
 	 * @return boolean
 	 */
-	public function latestAll($group = null)
+	public function latestAll(string $group = null)
 	{
+		$this->ensureTable();
+
 		// Set database group if not null
 		if (! is_null($group))
 		{
@@ -322,7 +335,7 @@ class MigrationRunner
 		}
 
 		// Get all namespaces form  PSR4 paths.
-		$config     = new Autoload();
+		$config     = config('Autoload');
 		$namespaces = $config->psr4;
 
 		foreach ($namespaces as $namespace => $path)
@@ -355,12 +368,14 @@ class MigrationRunner
 	/**
 	 * Sets the (APP_NAMESPACE) schema to $currentVersion in migration config file
 	 *
-	 * @param string $group
+	 * @param string|null $group
 	 *
 	 * @return mixed    TRUE if no migrations are found, current version string on success, FALSE on failure
 	 */
-	public function current($group = null)
+	public function current(string $group = null)
 	{
+		$this->ensureTable();
+
 		// Set database group if not null
 		if (! is_null($group))
 		{
@@ -417,13 +432,13 @@ class MigrationRunner
 	 *  if sequential check if no gaps and check if all consistent with migrations table if downgrading
 	 *  if timestamp check if consistent with migrations table if downgrading
 	 *
-	 * @param array   $migrations
-	 * @param string  $method
-	 * @param integer $targetversion
+	 * @param array  $migrations
+	 * @param string $method
+	 * @param string $targetversion
 	 *
 	 * @return boolean
 	 */
-	protected function checkMigrations(array $migrations, string $method, int $targetversion)
+	protected function checkMigrations(array $migrations, string $method, string $targetversion)
 	{
 		// Check if no migrations found
 		if (empty($migrations))
@@ -436,7 +451,7 @@ class MigrationRunner
 		}
 
 		// Check if $targetversion file is found
-		if ($targetversion !== 0 && ! array_key_exists($targetversion, $migrations))
+		if ($targetversion !== '0' && ! array_key_exists($targetversion, $migrations))
 		{
 			if ($this->silent)
 			{
@@ -514,10 +529,14 @@ class MigrationRunner
 	 * Set migration Name.
 	 *
 	 * @param string $name
+	 *
+	 * @return \CodeIgniter\Database\MigrationRunner
 	 */
 	public function setName(string $name)
 	{
 		$this->name = $name;
+
+		return $this;
 	}
 
 	//--------------------------------------------------------------------
@@ -529,8 +548,10 @@ class MigrationRunner
 	 *
 	 * @return array
 	 */
-	public function getHistory($group = 'default')
+	public function getHistory(string $group = 'default')
 	{
+		$this->ensureTable();
+
 		$query = $this->db->table($this->table)
 				->where('group', $group)
 				->where('namespace', $this->namespace)
@@ -571,7 +592,7 @@ class MigrationRunner
 	 *
 	 * @return string    Numeric portion of a migration filename
 	 */
-	protected function getMigrationNumber($migration)
+	protected function getMigrationNumber(string $migration)
 	{
 		return sscanf($migration, '%[0-9]+', $number) ? $number : '0';
 	}
@@ -585,7 +606,7 @@ class MigrationRunner
 	 *
 	 * @return string    text portion of a migration filename
 	 */
-	protected function getMigrationName($migration)
+	protected function getMigrationName(string $migration)
 	{
 		$parts = explode('_', $migration);
 		array_shift($parts);
@@ -602,6 +623,8 @@ class MigrationRunner
 	 */
 	protected function getVersion()
 	{
+		$this->ensureTable();
+
 		$row = $this->db->table($this->table)
 				->select('version')
 				->where('group', $this->group)
@@ -633,7 +656,7 @@ class MigrationRunner
 	 *
 	 * @internal param string $migration Migration reached
 	 */
-	protected function addHistory($version)
+	protected function addHistory(string $version)
 	{
 		$this->db->table($this->table)
 				->insert([
@@ -656,7 +679,7 @@ class MigrationRunner
 	 *
 	 * @param string $version
 	 */
-	protected function removeHistory($version)
+	protected function removeHistory(string $version)
 	{
 		$this->db->table($this->table)
 				->where('version', $version)
@@ -675,14 +698,14 @@ class MigrationRunner
 	 * Ensures that we have created our migrations table
 	 * in the database.
 	 */
-	protected function ensureTable()
+	public function ensureTable()
 	{
-		if ($this->db->tableExists($this->table))
+		if ($this->tableChecked || $this->db->tableExists($this->table))
 		{
 			return;
 		}
 
-		$forge = \Config\Database::forge();
+		$forge = \Config\Database::forge($this->db);
 
 		$forge->addField([
 			'version'   => [
@@ -713,6 +736,8 @@ class MigrationRunner
 		]);
 
 		$forge->createTable($this->table, true);
+
+		$this->tableChecked = true;
 	}
 
 	//--------------------------------------------------------------------
