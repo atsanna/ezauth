@@ -81,4 +81,22 @@ class Passwords
 
         return false;
     }
+
+    /**
+     * Provides a single place to determine how passwords are hashed.
+     *
+     * @param string $password
+     *
+     * @return bool|string
+     */
+    public static function hash(string $password)
+    {
+        // Replace all instances of multiple spaces to a single space
+        // to keep a user from screwing themselves.
+        $password = preg_replace('/\s+/', ' ', $password);
+
+        $hash = password_hash($password, PASSWORD_DEFAULT, ['cost' => 12]);
+
+        return $hash;
+    }
 }

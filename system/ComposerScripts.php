@@ -49,7 +49,7 @@
  */
 class ComposerScripts
 {
-	protected static $basePath = 'ThirdParty/';
+	protected static $SYSTEMPATH = 'ThirdParty/';
 
 	/**
 	 * After composer install/update, this is called to move
@@ -144,7 +144,7 @@ class ComposerScripts
 	{
 		if (class_exists('\\Zend\\Escaper\\Escaper') && is_file(static::getClassFilePath('\\Zend\\Escaper\\Escaper')))
 		{
-			$base = basename(__DIR__) . '/' . static::$basePath . 'ZendEscaper';
+			$base = basename(__DIR__) . '/' . static::$SYSTEMPATH . 'ZendEscaper';
 
 			foreach ([$base, $base . '/Exception'] as $path)
 			{
@@ -183,7 +183,7 @@ class ComposerScripts
 
 		if (is_file($filename))
 		{
-			$base = basename(__DIR__) . '/' . static::$basePath . 'Kint';
+			$base = basename(__DIR__) . '/' . static::$SYSTEMPATH . 'Kint';
 
 			// Remove the contents of the previous Kint folder, if any.
 			if (is_dir($base))

@@ -1,6 +1,7 @@
 <?php namespace EZAuth\Models;
 
 use CodeIgniter\Model;
+use EZAuth\Entities\User;
 
 class UserModel extends Model
 {
@@ -17,4 +18,6 @@ class UserModel extends Model
 		'last_name'  => 'required|min_length[2]',
 		'email'      => 'required|valid_email|is_unique[users.email,id,{id}]',
 	];
+
+	protected $returnType = User::class;
 }

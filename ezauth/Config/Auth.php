@@ -4,7 +4,7 @@ class Auth
 {
 	public $views = [
 		'register' => 'EZAuth\register',
-		'login'    => ''
+		'login'    => 'EZAuth\login',
 	];
 
 	// Should the password be checked against a

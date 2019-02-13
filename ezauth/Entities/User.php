@@ -1,6 +1,7 @@
 <?php namespace EZAuth\Entities;
 
 use CodeIgniter\Entity;
+use EZAuth\Passwords\Passwords;
 
 class User extends Entity
 {
@@ -18,11 +19,7 @@ class User extends Entity
 	 */
 	public function setPassword(string $password)
 	{
-		// Replace all instances of multiple spaces to a single space
-		// to keep a user from screwing themselves.
-		$password = preg_replace('/\s+/', ' ', $password);
-
-		$this->password_hash = password_hash($password, PASSWORD_DEFAULT, ['cost' => 12]);
+		$this->password_hash = Passwords::hash($password);
 
 		return $this;
 	}

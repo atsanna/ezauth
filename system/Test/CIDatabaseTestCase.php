@@ -70,7 +70,7 @@ class CIDatabaseTestCase extends CIUnitTestCase
 	 *
 	 * @var string
 	 */
-	protected $basePath = TESTPATH . '_support/Database';
+	protected $SYSTEMPATH = TESTPATH . '_support/Database';
 
 	/**
 	 * The namespace to help us fird the migration classes.
@@ -188,9 +188,9 @@ class CIDatabaseTestCase extends CIUnitTestCase
 
 		if (! empty($this->seed))
 		{
-			if (! empty($this->basePath))
+			if (! empty($this->SYSTEMPATH))
 			{
-				$this->seeder->setPath(rtrim($this->basePath, '/') . '/seeds');
+				$this->seeder->setPath(rtrim($this->SYSTEMPATH, '/') . '/seeds');
 			}
 
 			$this->seed($this->seed);
